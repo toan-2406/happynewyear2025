@@ -26,25 +26,22 @@ class SnakeSprites {
     }
 
     loadSprites() {
-        // Load snake sprites với theme Tết
-        this.sprites.snakeHead = {
-            green: this.loadImage(`snake_tet_head_green_${this.size}.png`),
-            gold: this.loadImage(`snake_tet_head_gold_${this.size}.png`)
+        // Snake sprites
+        this.sprites = {
+            snakeHeadGreen: this.loadImage('/assets/snakesprites/snake_tet_head_green_64.png'),
+            snakeHeadGold: this.loadImage('/assets/snakesprites/snake_tet_head_gold_64.png'),
+            snakeBodyGreen: this.loadImage('/assets/snakesprites/snake_tet_body_green_64.png'),
+            snakeBodyGold: this.loadImage('/assets/snakesprites/snake_tet_body_gold_64.png')
         };
 
-        this.sprites.snakeBody = {
-            green: this.loadImage(`snake_tet_body_green_${this.size}.png`),
-            gold: this.loadImage(`snake_tet_body_gold_${this.size}.png`)
-        };
-
-        // Load vật phẩm Tết
-        this.sprites.tetItems = {
-            banh_chung: this.loadImage(`banh_chung_${this.size}.png`),
-            hoa_dao: this.loadImage(`hoa_dao_${this.size}.png`),
-            hoa_mai: this.loadImage(`hoa_mai_${this.size}.png`),
-            li_xi: this.loadImage(`li_xi_${this.size}.png`),
-            mut_tet: this.loadImage(`mut_tet_${this.size}.png`),
-            phao: this.loadImage(`phao_${this.size}.png`)
+        // Collectible items
+        this.collectibles = {
+            banh_chung: this.loadImage('/assets/snakesprites/banh_chung_64.png'),
+            hoa_dao: this.loadImage('/assets/snakesprites/hoa_dao_64.png'),
+            hoa_mai: this.loadImage('/assets/snakesprites/hoa_mai_64.png'),
+            li_xi: this.loadImage('/assets/snakesprites/li_xi_64.png'),
+            mut_tet: this.loadImage('/assets/snakesprites/mut_tet_64.png'),
+            phao: this.loadImage('/assets/snakesprites/phao_64.png')
         };
     }
 

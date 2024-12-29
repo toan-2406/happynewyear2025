@@ -1,7 +1,24 @@
 class SnakeSprites {
     constructor(size = 64) { // size có thể là 32 hoặc 64
         this.size = size;
-        this.sprites = {};
+        // Khởi tạo sprites rỗng
+        this.sprites = {
+            snakeHeadGreen: null,
+            snakeHeadGold: null,
+            snakeBodyGreen: null,
+            snakeBodyGold: null
+        };
+        
+        // Khởi tạo collectibles rỗng
+        this.collectibles = {
+            banh_chung: null,
+            hoa_dao: null,
+            hoa_mai: null,
+            li_xi: null,
+            mut_tet: null,
+            phao: null
+        };
+        
         this.animations = {};
         this.particles = [];
         
@@ -45,9 +62,9 @@ class SnakeSprites {
         };
     }
 
-    loadImage(filename) {
+    loadImage(path) {
         const img = new Image();
-        img.src = `assets/snakesprites/${filename}`;
+        img.src = path;
         return img;
     }
 
@@ -120,7 +137,7 @@ class SnakeSprites {
 
     // Animation cho vật phẩm Tết
     animateCollectible(ctx, type, x, y, frame) {
-        const sprite = this.sprites.tetItems[type];
+        const sprite = this.collectibles[type];
         const bounce = Math.sin(frame * 0.1) * 3;
         
         // Thêm hiệu ứng lấp lánh cho lì xì
@@ -146,13 +163,18 @@ class SnakeSprites {
         // Sử dụng góc tùy chỉnh nếu có, ngược lại sử dụng góc mặc định theo hướng
         const angle = customAngle !== null ? customAngle : angles[direction];
         
-        // Chỉ vẽ đầu, bỏ phần vẽ mắt vì không có sprite mắt
-        this.rotateSprite(ctx, this.sprites.snakeHead[color], x, y, angle);
+        // Chỉn sprite đầu rắn dựa trên màu
+        const headSprite = color === 'green' ? this.sprites.snakeHeadGreen : this.sprites.snakeHeadGold;
+        
+        // Vẽ đầu rắn với góc xoay
+        this.rotateSprite(ctx, headSprite, x, y, angle);
     }
 
     // Vẽ phần thân rắn
     drawSnakeBody(ctx, x, y, color = 'green') {
-        ctx.drawImage(this.sprites.snakeBody[color], x, y, this.size, this.size);
+        // Chọn sprite thân rắn dựa trên màu
+        const bodySprite = color === 'green' ? this.sprites.snakeBodyGreen : this.sprites.snakeBodyGold;
+        ctx.drawImage(bodySprite, x, y, this.size, this.size);
     }
 
     // Hiệu ứng khi ăn vật phẩm

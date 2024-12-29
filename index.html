@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rồng Rắn Xuân Tỵ 2025</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #fff7e6;
+            font-family: Arial, sans-serif;
+            touch-action: none;
+            overflow-x: hidden;
+        }
+        
+        .game-container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            justify-content: center;
+            will-transform: transform;
+            padding: 20px;
+        }
+
+        .game-info {
+            width: 300px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            border: 2px solid #ff4d4d;
+            order: 2;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .game-info h2 {
+            color: #d4380d;
+            margin-top: 0;
+            border-bottom: 2px solid #ff4d4d;
+            padding-bottom: 10px;
+            font-size: 1.5em;
+        }
+
+        .item-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .item-list li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .item-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .controls {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #ff4d4d;
+        }
+
+        .canvas-container {
+            position: relative;
+            order: 1;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        canvas {
+            border: 4px solid #ff4d4d;
+            border-radius: 10px;
+            max-width: 100%;
+            height: auto;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .score {
+            color: #389e0d;
+            font-weight: bold;
+        }
+
+        .warning {
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        /* Joystick styles */
+        .joystick-container {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 77, 77, 0.5);
+            border-radius: 50%;
+            touch-action: none;
+            will-change: transform;
+            z-index: 1000;
+        }
+
+        .joystick-knob {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            background: #ff4d4d;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            will-change: transform;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .joystick-arrows {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .joystick-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+        }
+
+        .joystick-arrow.up {
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-color: rgba(255, 77, 77, 0.5);
+        }
+
+        .joystick-arrow.down {
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-top-color: rgba(255, 77, 77, 0.5);
+        }
+
+        .joystick-arrow.left {
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-right-color: rgba(255, 77, 77, 0.5);
+        }
+
+        .joystick-arrow.right {
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-left-color: rgba(255, 77, 77, 0.5);
+        }
+
+        /* Animation optimizations */
+        .item-list li {
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .item-icon {
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        /* Mobile controls */
+        .mobile-controls {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 10px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.8);
+            border-top: 2px solid #ff4d4d;
+        }
+
+        .mobile-controls button {
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            border: none;
+            border-radius: 50%;
+            background: #ff4d4d;
+            color: white;
+            font-size: 24px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-controls button:active {
+            background: #d43a3a;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .game-container {
+                gap: 15px;
+            }
+            
+            .game-info {
+                width: 100%;
+                max-width: 640px;
+                margin-top: 15px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            canvas {
+                width: 100%;
+                max-width: 480px;
+            }
+
+            .game-info h2 {
+                font-size: 1.2em;
+            }
+
+            .item-list li {
+                font-size: 0.8em;
+            }
+
+            .joystick-container {
+                display: block;
+            }
+
+            .mobile-controls {
+                display: none;
+            }
+
+            body {
+                padding-bottom: 200px;
+            }
+
+            /* Ẩn hướng dẫn phím trên mobile */
+            .keyboard-controls {
+                display: none;
+            }
+
+            .reset-button {
+                display: block;
+            }
+        }
+
+        /* Ngăn chọn văn bản trên mobile */
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        /* Reset button styles */
+        .reset-button {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #ff4d4d;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            cursor: pointer;
+            transform: translateZ(0);
+            will-change: transform;
+        }
+
+        .reset-button:active {
+            background: #d43a3a;
+            transform: translateZ(0) scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="640" height="640"></canvas>
+        </div>
+
+        <div class="game-info">
+            <h2>🎮 Hướng Dẫn Chơi</h2>
+            <div class="controls">
+                <p><strong>Di chuyển:</strong></p>
+                <ul class="keyboard-controls">
+                    <li>↑ hoặc W: Di chuyển lên</li>
+                    <li>↓ hoặc S: Di chuyển xuống</li>
+                    <li>← hoặc A: Di chuyển trái</li>
+                    <li>→ hoặc D: Di chuyển phải</li>
+                </ul>
+                <p><strong>SPACE:</strong> Chơi lại khi thua</p>
+            </div>
+
+            <h2>🏆 Vật Phẩm & Điểm</h2>
+            <ul class="item-list">
+                <li>
+                    <img src="assets/snakesprites/banh_chung_32.png" class="item-icon">
+                    <span>Bánh Chưng: <span class="score">+20 điểm</span></span>
+                </li>
+                <li>
+                    <img src="assets/snakesprites/hoa_dao_32.png" class="item-icon">
+                    <span>Hoa Đào: <span class="score">+15 điểm</span></span>
+                </li>
+                <li>
+                    <img src="assets/snakesprites/hoa_mai_32.png" class="item-icon">
+                    <span>Hoa Mai: <span class="score">+15 điểm</span></span>
+                </li>
+                <li>
+                    <img src="assets/snakesprites/li_xi_32.png" class="item-icon">
+                    <span>Lì Xì: <span class="score">+30 điểm</span></span>
+                </li>
+                <li>
+                    <img src="assets/snakesprites/mut_tet_64.png" class="item-icon">
+                    <span>Mứt Tết: <span class="score">+10 điểm</span></span>
+                </li>
+                <li>
+                    <img src="assets/snakesprites/phao_32.png" class="item-icon">
+                    <span>Pháo: <span class="warning">Game Over!</span></span>
+                </li>
+            </ul>
+
+            <h2>🌟 Cấp Độ</h2>
+            <ul>
+                <li>Mùng Một: Tốc độ thường, ít pháo</li>
+                <li>Mùng Hai: Tốc độ nhanh hơn, pháo nhiều hơn</li>
+                <li>Mùng Ba: Tốc độ nhanh nhất, nhiều pháo nhất</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Replace mobile-controls with joystick -->
+    <div class="joystick-container">
+        <div class="joystick-arrows">
+            <div class="joystick-arrow up"></div>
+            <div class="joystick-arrow down"></div>
+            <div class="joystick-arrow left"></div>
+            <div class="joystick-arrow right"></div>
+        </div>
+        <div class="joystick-knob"></div>
+    </div>
+
+    <button class="reset-button" id="resetButton">↺</button>
+
+    <script src="js/sprites.js"></script>
+    <script src="js/game.js"></script>
+    <script>
+        window.onload = function() {
+            const game = new SnakeGame('gameCanvas');
+
+            // Reset button handler
+            document.getElementById('resetButton').addEventListener('click', () => {
+                if (game.gameOver || game.hasWon) {
+                    game.restartGame();
+                }
+            });
+
+            // Joystick controls
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                const joystickContainer = document.querySelector('.joystick-container');
+                const joystickKnob = document.querySelector('.joystick-knob');
+                let isDragging = false;
+                let currentDirection = null;
+                let centerX, centerY;
+
+                function handleJoystickMove(clientX, clientY) {
+                    const rect = joystickContainer.getBoundingClientRect();
+                    centerX = rect.left + rect.width / 2;
+                    centerY = rect.top + rect.height / 2;
+                    
+                    const deltaX = clientX - centerX;
+                    const deltaY = clientY - centerY;
+                    const distance = Math.min(rect.width / 3, Math.hypot(deltaX, deltaY));
+                    const angle = Math.atan2(deltaY, deltaX);
+                    
+                    // Calculate knob position
+                    const knobX = Math.cos(angle) * distance;
+                    const knobY = Math.sin(angle) * distance;
+                    
+                    // Move knob with transform
+                    joystickKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`;
+                    
+                    // Determine direction
+                    const degrees = angle * 180 / Math.PI;
+                    let newDirection;
+                    
+                    if (distance > 10) { // Add a small threshold
+                        if (degrees > -45 && degrees <= 45) newDirection = 'right';
+                        else if (degrees > 45 && degrees <= 135) newDirection = 'down';
+                        else if (degrees > 135 || degrees <= -135) newDirection = 'left';
+                        else newDirection = 'up';
+                        
+                        if (newDirection !== currentDirection) {
+                            currentDirection = newDirection;
+                            game.changeDirection(newDirection);
+                        }
+                    }
+                }
+
+                // Touch events
+                joystickContainer.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    handleJoystickMove(e.touches[0].clientX, e.touches[0].clientY);
+                });
+
+                document.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    handleJoystickMove(e.touches[0].clientX, e.touches[0].clientY);
+                });
+
+                document.addEventListener('touchend', () => {
+                    isDragging = false;
+                    currentDirection = null;
+                    joystickKnob.style.transform = 'translate(-50%, -50%)';
+                });
+
+                // Mouse events for testing
+                joystickContainer.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    isDragging = true;
+                    handleJoystickMove(e.clientX, e.clientY);
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    handleJoystickMove(e.clientX, e.clientY);
+                });
+
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    currentDirection = null;
+                    joystickKnob.style.transform = 'translate(-50%, -50%)';
+                });
+            }
+        };
+    </script>
+</body>
+</html> 

@@ -21,14 +21,7 @@ class SnakeGame {
             });
         }
         
-        // Các cấp độ với tên theo chủ đề Tết
-        this.levels = {
-            'Mùng Một': { speed: 5, foodScore: 10, bombFrequency: 0.1 },
-            'Mùng Hai': { speed: 7, foodScore: 15, bombFrequency: 0.2 },
-            'Mùng Ba': { speed: 9, foodScore: 20, bombFrequency: 0.3 }
-        };
-
-        // Vật phẩm Tết
+        // Vật phẩm Tết và điểm số tương ứng
         this.tetItems = {
             banh_chung: { score: 20, color: '#45a049' },
             hoa_dao: { score: 15, color: '#ff69b4' },
@@ -38,6 +31,13 @@ class SnakeGame {
             phao: { score: -50, color: '#ff4444' }
         };
         
+        // Các cấp độ với tốc độ và tần suất xuất hiện pháo
+        this.levels = {
+            'Mùng Một': { speed: 5, bombFrequency: 0.1 },
+            'Mùng Hai': { speed: 7, bombFrequency: 0.2 },
+            'Mùng Ba': { speed: 9, bombFrequency: 0.3 }
+        };
+
         this.currentLevel = 'Mùng Một';
         this.levelUpScore = 100;
         
@@ -85,9 +85,9 @@ class SnakeGame {
         
         // Cập nhật điểm yêu cầu cho từng level
         this.levelScores = {
-            'Mùng Một': 100,
-            'Mùng Hai': 120,
-            'Mùng Ba': 150
+            'Mùng Một': 100,  // Level 1: Cần 100 điểm để lên Level 2
+            'Mùng Hai': 220,  // Level 2: Cần thêm 120 điểm (tổng 220) để lên Level 3
+            'Mùng Ba': 370    // Level 3: Cần thêm 150 điểm (tổng 370) để chiến thắng
         };
         
         // Thêm biến để kiểm tra chiến thắng
@@ -110,6 +110,66 @@ class SnakeGame {
         this.lastInputTime = 0;
         this.inputDelay = 30; // Giảm từ 50ms xuống 30ms
         this.maxBufferSize = 3; // Tăng buffer size để lưu nhiều input hơn
+
+        // Thêm theo dõi vị trí chuột
+        this.mousePos = null;
+        this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mousePos = {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        });
+
+        // Xử lý click cho desktop
+        this.canvas.addEventListener('click', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // Xử lý click button bắt đầu
+            if (!this.isGameStarted && this.startButton) {
+                if (this.isPointInButton(clickX, clickY, this.startButton)) {
+                    this.startGame();
+                    return;
+                }
+            }
+
+            // Xử lý click button chơi lại
+            if ((this.gameOver || this.hasWon) && this.restartButton) {
+                if (this.isPointInButton(clickX, clickY, this.restartButton)) {
+                    this.restartGame();
+                }
+            }
+        });
+
+        // Xử lý touch cho mobile
+        this.canvas.addEventListener('touchstart', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const touchX = touch.clientX - rect.left;
+            const touchY = touch.clientY - rect.top;
+
+            // Xử lý touch button bắt đầu
+            if (!this.isGameStarted && this.startButton) {
+                if (this.isPointInButton(touchX, touchY, this.startButton)) {
+                    e.preventDefault();
+                    this.startGame();
+                    return;
+                }
+            }
+
+            // Xử lý touch button chơi lại
+            if ((this.gameOver || this.hasWon) && this.restartButton) {
+                if (this.isPointInButton(touchX, touchY, this.restartButton)) {
+                    e.preventDefault();
+                    this.restartGame();
+                }
+            }
+        });
+
+        // Thêm biến để kiểm tra trạng thái bắt đầu game
+        this.isGameStarted = false;
     }
     
     setupTouchControls() {
@@ -230,17 +290,35 @@ class SnakeGame {
         // Không cho đổi hướng khi game over hoặc đã thắng
         if (this.gameOver || this.hasWon) return;
 
-        const opposite = {
-            'up': 'down',
-            'down': 'up',
-            'left': 'right',
-            'right': 'left'
+        const directionAngles = {
+            'up': 0,
+            'right': 90,
+            'down': 180,
+            'left': 270
         };
 
-        const now = Date.now();
+        const currentAngle = directionAngles[this.snake.direction];
+        const newAngle = directionAngles[newDirection];
         
-        // Log thông tin input mới
-        console.log(`Input mới: ${newDirection}, Hướng hiện tại: ${this.snake.direction}, Move Progress: ${this.snake.moveProgress}`);
+        // Tính góc quay (độ)
+        let angleDiff = Math.abs(newAngle - currentAngle);
+        // Xử lý trường hợp góc quay qua 360 độ
+        if (angleDiff > 180) {
+            angleDiff = 360 - angleDiff;
+        }
+
+        // Log thông tin góc quay
+        console.log(`Hướng hiện tại: ${this.snake.direction} (${currentAngle}°)`);
+        console.log(`Hướng mới: ${newDirection} (${newAngle}°)`);
+        console.log(`Góc quay: ${angleDiff}°`);
+
+        // Chỉ cho phép quay 45 hoặc 90 độ
+        if (angleDiff > 90) {
+            console.log('Bỏ qua do góc quay quá lớn');
+            return;
+        }
+
+        const now = Date.now();
         
         // Cho phép đổi hướng khi đã di chuyển được 70% quãng đường
         if (this.snake.moveProgress < 0.7) {
@@ -267,12 +345,6 @@ class SnakeGame {
 
         // Lấy hướng từ buffer nếu có, không thì dùng hướng mới
         const directionToApply = this.inputBuffer.length > 0 ? this.inputBuffer.shift() : newDirection;
-        
-        // Kiểm tra hướng ngược lại với hướng hiện tại
-        if (opposite[directionToApply] === this.snake.direction) {
-            console.log('Bỏ qua do là hướng ngược lại');
-            return;
-        }
 
         // Cập nhật hướng và thời gian
         this.snake.lastDirection = this.snake.direction;
@@ -297,8 +369,13 @@ class SnakeGame {
             this.changeDirection(directions[event.code]);
         }
         
-        if (event.code === 'Space' && this.gameOver) {
-            this.restartGame();
+        // Xử lý phím Space
+        if (event.code === 'Space') {
+            if (!this.isGameStarted) {
+                this.startGame();
+            } else if (this.gameOver || this.hasWon) {
+                this.restartGame();
+            }
         }
     }
     
@@ -308,6 +385,11 @@ class SnakeGame {
     }
     
     restartGame() {
+        this.isGameStarted = true;
+        this.score = 0;
+        this.currentLevel = 'Mùng Một';
+        this.gameOver = false;
+        this.hasWon = false;
         this.snake = {
             body: [
                 {
@@ -315,7 +397,7 @@ class SnakeGame {
                     renderX: 320, renderY: 320
                 },
                 {
-                    x: 256, y: 320,  // Thêm một phần thân phía sau head
+                    x: 256, y: 320,
                     renderX: 256, renderY: 320
                 }
             ],
@@ -325,10 +407,15 @@ class SnakeGame {
             moveProgress: 0
         };
         this.food = this.generateFood();
-        this.score = 0;
-        this.currentLevel = 'Mùng Một';
-        this.gameOver = false;
-        this.hasWon = false; // Reset trạng thái chiến thắng
+        
+        // Chọn lời chúc mới khi chơi lại
+        fetch('assets/wishes_2025.json')
+            .then(response => response.json())
+            .then(data => {
+                const randomIndex = Math.floor(Math.random() * data.wishes.length);
+                this.currentWish = data.wishes[randomIndex].content;
+            })
+            .catch(error => console.error('Error loading wishes:', error));
     }
     
     generateFood() {
@@ -411,27 +498,49 @@ class SnakeGame {
     checkLevelUp() {
         const levels = Object.keys(this.levels);
         const currentLevelIndex = levels.indexOf(this.currentLevel);
-        const currentLevelScore = this.levelScores[this.currentLevel];
         
-        if (this.score >= currentLevelScore) {
-            if (currentLevelIndex < levels.length - 1) {
-                // Chuyển sang level tiếp theo
-                this.currentLevel = levels[currentLevelIndex + 1];
-                // Đổi màu rắn khi lên level
-                this.snake.color = this.getRandomTetColor();
-                return true;
-            } else if (this.score >= this.levelScores['Mùng Ba']) {
-                // Chiến thắng game khi đạt đủ điểm ở level cuối
-                this.hasWon = true;
-                return true;
-            }
+        // Log thông tin level hiện tại
+        console.log(`Level hiện tại: ${this.currentLevel}`);
+        console.log(`Điểm hiện tại: ${this.score}`);
+        console.log(`Điểm yêu cầu cho level hiện tại: ${this.levelScores[this.currentLevel]}`);
+
+        // Kiểm tra điều kiện level up dựa trên điểm số
+        if (this.currentLevel === 'Mùng Một' && this.score >= this.levelScores['Mùng Một']) {
+            this.currentLevel = 'Mùng Hai';
+            this.snake.color = this.getRandomTetColor();
+            console.log('Level up: Mùng Hai');
+            return true;
+        } else if (this.currentLevel === 'Mùng Hai' && this.score >= this.levelScores['Mùng Hai']) {
+            this.currentLevel = 'Mùng Ba';
+            this.snake.color = this.getRandomTetColor();
+            console.log('Level up: Mùng Ba');
+            return true;
+        } else if (this.currentLevel === 'Mùng Ba' && this.score >= this.levelScores['Mùng Ba']) {
+            this.hasWon = true;
+            console.log('Chiến thắng!');
+            return true;
         }
+
+        // Cập nhật điểm cần đạt cho level tiếp theo
+        let pointsNeeded;
+        if (this.currentLevel === 'Mùng Một') {
+            pointsNeeded = this.levelScores['Mùng Một'] - this.score;
+        } else if (this.currentLevel === 'Mùng Hai') {
+            pointsNeeded = this.levelScores['Mùng Hai'] - this.score;
+        } else if (this.currentLevel === 'Mùng Ba') {
+            pointsNeeded = this.levelScores['Mùng Ba'] - this.score;
+        }
+
+        // Đảm bảo pointsNeeded luôn là số dương
+        this.levelUpScore = Math.max(0, pointsNeeded);
+        console.log(`Cần thêm ${this.levelUpScore} điểm để lên level tiếp theo`);
+
         return false;
     }
     
     update() {
-        // Không update khi game over hoặc đã thắng
-        if (this.gameOver || this.hasWon) return;
+        // Không update khi chưa bắt đầu, game over hoặc đã thắng
+        if (!this.isGameStarted || this.gameOver || this.hasWon) return;
         
         this.snake.body.forEach(part => {
             if (!part.renderX) part.renderX = part.x;
@@ -475,8 +584,21 @@ class SnakeGame {
                 return;
             }
             
+            // Tính điểm dựa trên loại vật phẩm
             const scoreMultiplier = this.isGodMode ? 2 : 1;
-            this.score += this.levels[this.currentLevel].foodScore * scoreMultiplier;
+            const baseScore = this.tetItems[collidedFood.type].score;
+            const levelBonus = {
+                'Mùng Một': 1,
+                'Mùng Hai': 1.2,
+                'Mùng Ba': 1.5
+            };
+            
+            // Tính điểm cuối cùng với hệ số cấp độ
+            const finalScore = Math.round(baseScore * levelBonus[this.currentLevel] * scoreMultiplier);
+            this.score += finalScore;
+            
+            // Log thông tin điểm
+            console.log(`Vật phẩm: ${collidedFood.type}, Điểm gốc: ${baseScore}, Hệ số level: ${levelBonus[this.currentLevel]}, Điểm cuối: ${finalScore}`);
             
             if (this.checkLevelUp()) {
                 this.sprites.createParticles(head.x, head.y, '#ffffff', 30);
@@ -484,17 +606,19 @@ class SnakeGame {
             
             this.food = this.generateFood();
             
+            // Thêm một phần thân mới vào cuối
             const tail = this.snake.body[this.snake.body.length - 1];
-            head.renderX = head.x;
-            head.renderY = head.y;
-            this.snake.body.unshift(head);
-            
             const newTail = {
                 x: tail.x,
                 y: tail.y,
                 renderX: tail.renderX,
                 renderY: tail.renderY
             };
+            
+            // Cập nhật vị trí đầu rắn
+            head.renderX = head.x;
+            head.renderY = head.y;
+            this.snake.body.unshift(head);
             this.snake.body.push(newTail);
 
             // Log độ dài của rắn và loại vật phẩm vừa ăn
@@ -542,6 +666,61 @@ class SnakeGame {
         this.ctx.lineWidth = 4;
         this.ctx.strokeRect(2, 2, this.canvas.width-4, this.canvas.height-4);
 
+        if (!this.isGameStarted) {
+            // Vẽ màn hình bắt đầu
+            this.ctx.fillStyle = 'rgba(255, 215, 0, 0.8)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            // Vẽ tiêu đề game
+            this.ctx.fillStyle = '#d4380d';
+            this.ctx.font = 'bold 48px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText('🎮 Rồng Rắn Xuân Tỵ 2025 🎮', this.canvas.width/2, this.canvas.height/2 - 100);
+            
+            // Vẽ hướng dẫn
+            this.ctx.font = '24px Arial';
+            this.ctx.fillText('Sử dụng phím mũi tên hoặc WASD để di chuyển', this.canvas.width/2, this.canvas.height/2 - 40);
+            this.ctx.fillText('Thu thập các vật phẩm Tết để ghi điểm', this.canvas.width/2, this.canvas.height/2);
+            this.ctx.fillText('Tránh va chạm với pháo và thân rắn', this.canvas.width/2, this.canvas.height/2 + 40);
+
+            // Vẽ button bắt đầu
+            const buttonWidth = 200;
+            const buttonHeight = 50;
+            const buttonX = this.canvas.width/2 - buttonWidth/2;
+            const buttonY = this.canvas.height/2 + 100;
+
+            // Vẽ nền button
+            this.ctx.fillStyle = '#ff4d4d';
+            this.ctx.beginPath();
+            this.ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 25);
+            this.ctx.fill();
+
+            // Vẽ hiệu ứng hover
+            if (this.isMouseOverButton(buttonX, buttonY, buttonWidth, buttonHeight)) {
+                this.ctx.fillStyle = '#ff3333';
+                this.ctx.beginPath();
+                this.ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 25);
+                this.ctx.fill();
+            }
+
+            // Vẽ text button
+            this.ctx.fillStyle = '#fff';
+            this.ctx.font = 'bold 24px Arial';
+            this.ctx.fillText('Bắt đầu', this.canvas.width/2, buttonY + 33);
+
+            // Lưu vị trí button để xử lý click
+            this.startButton = {
+                x: buttonX,
+                y: buttonY,
+                width: buttonWidth,
+                height: buttonHeight
+            };
+
+            // Vẽ hiệu ứng Tết
+            this.drawTetEffects();
+            return;
+        }
+
         this.snake.moveProgress = Math.min(1, this.snake.moveProgress + 0.1);
         
         this.snake.body.forEach((part, index) => {
@@ -575,7 +754,19 @@ class SnakeGame {
         this.ctx.textAlign = 'left';
         this.ctx.fillText(`Điểm: ${this.score}`, 10, 30);
         this.ctx.fillText(`Ngày: ${this.currentLevel}`, 10, 60);
-        this.ctx.fillText(`Mốc tiếp theo: ${this.levelUpScore - this.score} điểm`, 10, 90);
+        
+        // Hiển thị điểm cần đạt cho level tiếp theo
+        if (!this.hasWon) {
+            let targetScore;
+            if (this.currentLevel === 'Mùng Một') {
+                targetScore = this.levelScores['Mùng Một'];
+            } else if (this.currentLevel === 'Mùng Hai') {
+                targetScore = this.levelScores['Mùng Hai'];
+            } else {
+                targetScore = this.levelScores['Mùng Ba'];
+            }
+            this.ctx.fillText(`Mốc tiếp theo: ${targetScore} điểm (còn ${this.levelUpScore} điểm)`, 10, 90);
+        }
 
         if (this.hasWon) {
             // Vẽ màn hình chiến thắng
@@ -595,13 +786,44 @@ class SnakeGame {
             
             this.ctx.font = 'bold 32px Arial';
             this.ctx.fillText(`Điểm số: ${this.score}`, this.canvas.width/2, this.canvas.height/2 + 60);
-            this.ctx.font = '24px Arial';
-            this.ctx.fillText('Nhấn SPACE để chơi lại', this.canvas.width/2, this.canvas.height/2 + 100);
+
+            // Vẽ button chơi lại
+            const buttonWidth = 200;
+            const buttonHeight = 50;
+            const buttonX = this.canvas.width/2 - buttonWidth/2;
+            const buttonY = this.canvas.height/2 + 100;
+
+            // Vẽ nền button
+            this.ctx.fillStyle = '#ff4d4d';
+            this.ctx.beginPath();
+            this.ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 25);
+            this.ctx.fill();
+
+            // Vẽ hiệu ứng hover nếu chuột đang hover
+            if (this.isMouseOverButton(buttonX, buttonY, buttonWidth, buttonHeight)) {
+                this.ctx.fillStyle = '#ff3333';
+                this.ctx.beginPath();
+                this.ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 25);
+                this.ctx.fill();
+            }
+
+            // Vẽ text button
+            this.ctx.fillStyle = '#fff';
+            this.ctx.font = 'bold 24px Arial';
+            this.ctx.fillText('Chơi lại', this.canvas.width/2, buttonY + 33);
+
+            // Lưu vị trí button để xử lý click
+            this.restartButton = {
+                x: buttonX,
+                y: buttonY,
+                width: buttonWidth,
+                height: buttonHeight
+            };
             
             // Tạo thêm hiệu ứng pháo hoa
             this.createFireworks();
         } else if (this.gameOver) {
-            this.ctx.fillStyle = 'rgba(255, 77, 77, 0.8)'; // Màu đỏ trong suốt
+            this.ctx.fillStyle = 'rgba(255, 77, 77, 0.8)';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.fillStyle = '#fff';
             this.ctx.font = 'bold 48px Arial';
@@ -609,7 +831,39 @@ class SnakeGame {
             this.ctx.fillText('Chúc Bạn Năm Mới!', this.canvas.width/2, this.canvas.height/2);
             this.ctx.font = '24px Arial';
             this.ctx.fillText(`Điểm cao: ${this.score}`, this.canvas.width/2, this.canvas.height/2 + 40);
-            this.ctx.fillText('Nhấn SPACE để chơi tiếp', this.canvas.width/2, this.canvas.height/2 + 80);
+
+            // Vẽ button chơi lại
+            const buttonWidth = 200;
+            const buttonHeight = 50;
+            const buttonX = this.canvas.width/2 - buttonWidth/2;
+            const buttonY = this.canvas.height/2 + 60;
+
+            // Vẽ nền button
+            this.ctx.fillStyle = '#ff4d4d';
+            this.ctx.beginPath();
+            this.ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 25);
+            this.ctx.fill();
+
+            // Vẽ hiệu ứng hover nếu chuột đang hover
+            if (this.isMouseOverButton(buttonX, buttonY, buttonWidth, buttonHeight)) {
+                this.ctx.fillStyle = '#ff3333';
+                this.ctx.beginPath();
+                this.ctx.roundRect(buttonX, buttonY, buttonWidth, buttonHeight, 25);
+                this.ctx.fill();
+            }
+
+            // Vẽ text button
+            this.ctx.fillStyle = '#fff';
+            this.ctx.font = 'bold 24px Arial';
+            this.ctx.fillText('Chơi lại', this.canvas.width/2, buttonY + 33);
+
+            // Lưu vị trí button để xử lý click
+            this.restartButton = {
+                x: buttonX,
+                y: buttonY,
+                width: buttonWidth,
+                height: buttonHeight
+            };
         }
 
         // Hiệu ứng particle cho Tết
@@ -690,5 +944,48 @@ class SnakeGame {
             const color = colors[Math.floor(Math.random() * colors.length)];
             this.sprites.createParticles(x, y, color, 20);
         }
+    }
+
+    // Thêm method kiểm tra hover
+    isMouseOverButton(x, y, width, height) {
+        if (!this.mousePos) return false;
+        return this.mousePos.x >= x && 
+               this.mousePos.x <= x + width && 
+               this.mousePos.y >= y && 
+               this.mousePos.y <= y + height;
+    }
+
+    // Thêm method kiểm tra điểm có nằm trong button không
+    isPointInButton(x, y, button) {
+        return x >= button.x && 
+               x <= button.x + button.width && 
+               y >= button.y && 
+               y <= button.y + button.height;
+    }
+
+    // Thêm method bắt đầu game
+    startGame() {
+        this.isGameStarted = true;
+        this.score = 0;
+        this.currentLevel = 'Mùng Một';
+        this.gameOver = false;
+        this.hasWon = false;
+        this.snake = {
+            body: [
+                {
+                    x: 320, y: 320,
+                    renderX: 320, renderY: 320
+                },
+                {
+                    x: 256, y: 320,
+                    renderX: 256, renderY: 320
+                }
+            ],
+            direction: 'right',
+            color: this.getRandomTetColor(),
+            lastDirection: 'right',
+            moveProgress: 0
+        };
+        this.food = this.generateFood();
     }
 } 
